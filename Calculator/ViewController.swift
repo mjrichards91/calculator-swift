@@ -23,6 +23,11 @@ class ViewController: UIViewController {
         }
     }
     
+    @IBAction func clear(_ sender: UIButton) {
+        display.text = "0"
+        brain = CalculatorBrain()
+    }
+    
     @IBAction func touchDigit(_ sender: UIButton) {
         let digit = sender.currentTitle!
         
