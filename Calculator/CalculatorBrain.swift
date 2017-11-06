@@ -16,20 +16,24 @@ struct CalculatorBrain {
         case constant(Double)
         case unaryOperation((Double) -> Double)
         case binaryOperation((Double, Double) -> Double)
+        case powOperation(Double)
         case equals
     }
     
     private var operations: Dictionary<String, Operation> = [
-            "π" : Operation.constant(Double.pi),
-            "e" : Operation.constant(M_E),
-            "√" : Operation.unaryOperation(sqrt),
-            "cos" : Operation.unaryOperation(cos),
-            "±" : Operation.unaryOperation({ -$0 }),
-            "×" : Operation.binaryOperation({ $0 * $1 }),
-            "÷" : Operation.binaryOperation({ $0 / $1 }),
-            "+" : Operation.binaryOperation({ $0 + $1 }),
-            "−" : Operation.binaryOperation({ $0 - $1 }),
-            "=" : Operation.equals
+        "+" : Operation.binaryOperation({ $0 + $1 }),
+        "−" : Operation.binaryOperation({ $0 - $1 }),
+        "÷" : Operation.binaryOperation({ $0 / $1 }),
+        "×" : Operation.binaryOperation({ $0 * $1 }),
+        "e" : Operation.constant(M_E),
+        "π" : Operation.constant(Double.pi),
+        "tan" :  Operation.unaryOperation(tan),
+        "√" : Operation.unaryOperation(sqrt),
+        "sin" : Operation.unaryOperation(sin),
+        "cos" : Operation.unaryOperation(cos),
+        "x²" : Operation.powOperation(2),
+        "±" : Operation.unaryOperation({ -$0 }),
+        "=" : Operation.equals
     ]
     
     private var pendingBinaryOperation: PendingBinaryOperation?
@@ -56,6 +60,10 @@ struct CalculatorBrain {
                 if accumulator != nil {
                     pendingBinaryOperation = PendingBinaryOperation(function: function, firstOperand: accumulator!)
                     accumulator = nil
+                }
+            case .powOperation(let value):
+                if accumulator != nil {
+                    accumulator = pow(accumulator!, value)
                 }
             case .equals:
                 performPendingBinaryOperation()
