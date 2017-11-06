@@ -12,6 +12,8 @@ struct CalculatorBrain {
     
     private var accumulator: Double?
     
+    private var descriptionValues: [String] = []
+    
     private var accumulatorValue: String {
         get {
             return String(format: "%g", accumulator!)
@@ -58,20 +60,15 @@ struct CalculatorBrain {
             switch operation {
             case .constant(let value):
                 accumulator = value
-                description += symbol
+                descriptionValues.append(symbol)
             case .unaryOperation(let function):
                 if accumulator != nil {
-                    if resultIsPending {
-                        description += "\(symbol)(\(accumulatorValue))"
-                    } else {
-                        description = "\(symbol)(\(description))"
-                    }
-                    
+                    descriptionValues.append("\(symbol)(\(descriptionValues.removeLast()))")
                     accumulator = function(accumulator!)
                 }
             case .binaryOperation(let function):
                 if accumulator != nil {
-                    description += symbol
+                    descriptionValues.append(symbol)
                     pendingBinaryOperation = PendingBinaryOperation(function: function, firstOperand: accumulator!)
                     accumulator = nil
                 }
@@ -80,6 +77,8 @@ struct CalculatorBrain {
                     accumulator = pow(accumulator!, value)
                 }
             case .equals:
+                // Reset the first element to the finalized caluculation
+                descriptionValues = [description]
                 performPendingBinaryOperation()
             }
         }
@@ -94,7 +93,7 @@ struct CalculatorBrain {
     
     mutating func setOperand(_ operand: Double) {
         accumulator = operand
-        description += accumulatorValue
+        descriptionValues.append(accumulatorValue)
     }
     
     var result: Double? {
@@ -109,5 +108,9 @@ struct CalculatorBrain {
         }
     }
     
-    var description = String()
+    var description: String {
+        get {
+            return descriptionValues.joined()
+        }
+    }
 }
