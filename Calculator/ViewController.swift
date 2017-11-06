@@ -29,6 +29,7 @@ class ViewController: UIViewController {
         displayValue = 0
         calculationDescription.text = " "
         brain = CalculatorBrain()
+        userIsInTheMiddleOfTyping = false 
     }
     
     @IBAction func touchDigit(_ sender: UIButton) {

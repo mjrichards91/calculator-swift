@@ -68,6 +68,10 @@ struct CalculatorBrain {
                 }
             case .binaryOperation(let function):
                 if accumulator != nil {
+                    if resultIsPending {
+                        performPendingBinaryOperation()
+                    }
+                    
                     descriptionValues.append(symbol)
                     pendingBinaryOperation = PendingBinaryOperation(function: function, firstOperand: accumulator!)
                     accumulator = nil
@@ -93,7 +97,12 @@ struct CalculatorBrain {
     
     mutating func setOperand(_ operand: Double) {
         accumulator = operand
-        descriptionValues.append(accumulatorValue)
+        
+        if descriptionValues.count == 1 {
+            descriptionValues = [accumulatorValue]
+        } else {
+            descriptionValues.append(accumulatorValue)
+        }
     }
     
     var result: Double? {
