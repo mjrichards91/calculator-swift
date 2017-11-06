@@ -28,7 +28,11 @@ class ViewController: UIViewController {
         
         if userIsInTheMiddleOfTyping {
             let textCurrentlyInDisplay = display.text!
-            display.text = textCurrentlyInDisplay + digit
+            
+            // Only allow a single decimal for the current number
+            if digit != "." || !textCurrentlyInDisplay.contains(".") {
+                display.text = textCurrentlyInDisplay + digit
+            }
         } else {
             display.text = digit
             userIsInTheMiddleOfTyping = true
