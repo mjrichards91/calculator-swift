@@ -12,6 +12,12 @@ struct CalculatorBrain {
     
     private var accumulator: Double?
     
+    private var accumulatorValue: String {
+        get {
+            return String(format: "%g", accumulator!)
+        }
+    }
+    
     private enum Operation {
         case constant(Double)
         case unaryOperation((Double) -> Double)
@@ -52,12 +58,20 @@ struct CalculatorBrain {
             switch operation {
             case .constant(let value):
                 accumulator = value
+                description += symbol
             case .unaryOperation(let function):
                 if accumulator != nil {
+                    if resultIsPending {
+                        description += "\(symbol)(\(accumulatorValue))"
+                    } else {
+                        description = "\(symbol)(\(description))"
+                    }
+                    
                     accumulator = function(accumulator!)
                 }
             case .binaryOperation(let function):
                 if accumulator != nil {
+                    description += symbol
                     pendingBinaryOperation = PendingBinaryOperation(function: function, firstOperand: accumulator!)
                     accumulator = nil
                 }
@@ -72,7 +86,7 @@ struct CalculatorBrain {
     }
     
     private mutating func performPendingBinaryOperation() {
-        if pendingBinaryOperation != nil && accumulator != nil {
+        if resultIsPending && accumulator != nil {
             accumulator = pendingBinaryOperation!.perform(with: accumulator!)
             pendingBinaryOperation = nil
         }
@@ -80,6 +94,7 @@ struct CalculatorBrain {
     
     mutating func setOperand(_ operand: Double) {
         accumulator = operand
+        description += accumulatorValue
     }
     
     var result: Double? {
@@ -87,4 +102,12 @@ struct CalculatorBrain {
             return accumulator
         }
     }
+    
+    var resultIsPending: Bool {
+        get {
+            return pendingBinaryOperation != nil
+        }
+    }
+    
+    var description = String()
 }

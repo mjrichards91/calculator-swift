@@ -12,6 +12,8 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var display: UILabel!
     
+    @IBOutlet weak var calculationDescription: UILabel!
+    
     var userIsInTheMiddleOfTyping = false
     
     var displayValue: Double {
@@ -19,12 +21,13 @@ class ViewController: UIViewController {
             return Double(display.text!)!
         }
         set {
-            display.text = String(newValue)
+            display.text = String(format: "%g", newValue)
         }
     }
     
     @IBAction func clear(_ sender: UIButton) {
-        display.text = "0"
+        displayValue = 0
+        calculationDescription.text = " "
         brain = CalculatorBrain()
     }
     
@@ -58,6 +61,12 @@ class ViewController: UIViewController {
         
         if let result = brain.result {
             displayValue = result
+        }
+        
+        if brain.resultIsPending {
+            calculationDescription.text = brain.description + "..."
+        } else {
+            calculationDescription.text = brain.description + "="
         }
     }
 }
