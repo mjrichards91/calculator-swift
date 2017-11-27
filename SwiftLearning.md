@@ -81,7 +81,33 @@ Optionals do not have to unwrapped to set.
 @IBOutlet weak var display: UILabel!
 ```
 
-Declarations with a `!` automagically unwraps the optional value as the `?` does not. 
+Declarations with a `!` automagically unwraps the optional value as the `?` does not. Throws an exception if the value happened to be nil.
+
+An optional is just an `enum`:
+
+```swift
+enum Optional<T> {
+    case none
+    case some(T)
+}
+```
+
+Defaulting:
+
+```swift
+// If s is nil, will set to the empty string, otherwise s
+display.text = s ?? " "
+```
+
+Optionals can be "chained":
+
+```swift
+var display : UILabel?
+
+if let x = display?.text?.hasValue { ... } // x is an Int as "if let" unwraps it
+
+let x = display?.text?.hasValue { ... } // x is an Int? as it was never officially "unwrapped"
+```
 
 ## UI
 
@@ -99,7 +125,7 @@ let cat = “cat"; print(cat)
 
 ## Properties
 
-All properties must be initialized unless they are optionals. Behind the scenes, optionals are set to `nil`
+All properties must be initialized unless they are optionals. Behind the scenes, optionals are set to `nil`.l
 
 ### Computed properties:
 
@@ -122,6 +148,34 @@ var result: Double {
         
     }
 }
+```
+
+### Property Observers
+
+Can observe changes to any property via `willSet` and `didSet`.
+
+```swift
+var someProperty: Int = 42 {
+    willSet { newValue }
+    didSet { oldValue }
+}
+```
+
+### Lazy Properties
+
+Does not get initialized until accessed. Useful for expensive operations that are used to set the property.
+
+```swift
+// Set and initialize lazily
+lazy var brain = CalculatorBrain()
+
+// Set and initialize lazily via a closure
+lazy var someProperty: Type = {
+    return someValue;
+}()
+
+// Set and initialize lazily via a method
+lazy var myProperty = self.initializeMyProperty()
 ```
 
 ### private
@@ -221,3 +275,208 @@ Operation.binaryOperation({ $0 * $1 }),
 ```
 
 Defines a closure to use for the `binaryOperation((Double, Double) -> Double)` signature. Swift can infer the parameter and return types so they do not need to be defined. Swift also indexes its parameters using `$` notation with numbers representing the parameter order.
+
+## Tuples
+
+```swift
+// The bad way, but valid
+let x: (String, Int, Double) = ("hello", 5, 0.85)
+let (word, number, value) = x
+print(word)
+print(number)
+print(value)
+```
+
+OR
+
+```swift
+// Use named parameters (strongly preferred)
+let x: (w: String, i: Int, v: Double) = ("hello", 5, 0.85)
+print(x.w)
+print(x.i)
+print(x.v)
+```
+
+Can be used as a return value from a function:
+
+```swift
+func getSize() -> (weight: Double, height: Double) { return (250, 80) }
+```
+
+## Range
+
+Represents 2 endpoints like a selection of text or portion of an array.
+
+```swift
+let array = ["a", "b", "c", "d"]
+
+let a = array[2...3] // contains ["c", "d"]
+let b = array[2..<3] // contains ["c"]
+```
+
+Out of bounds exceptions will occur with Ranges.
+
+CountableRange (i.e. can be iterated over):
+
+```swift
+// Range can be iterated over. This works with the above array example too
+for i in 0..<20 {
+}
+```
+
+```swift
+// Range can also be iterated over by using the increment
+for i in stride(from: 0.5, through: 15.25, by: 0.3) {
+}
+```
+
+## final
+
+Can mark a function or entire class to prevent it from being overridden.
+
+## Array
+
+```swift
+var a = Array<String>()
+
+var a = [String]() // preferred way
+
+let animals = ["Giraffe", "Cow"] // inferred as a [String]
+animals.append("Dog") // will not compile as let makes it immutable
+```
+
+Array closures (i.e. lambdas):
+
+```swift
+let bigNumbers = [2,47,118,5,9].filter({ $0 > 20 }) // bigNumbers = [47, 118]
+
+let stringified: [String] = [1,2,3].map { String($0) } // Can omit parenthesis if closure is trailing (last argument)
+
+let sum = [1,2,3].reduce(0, +) // + is just a function in Swift
+```
+
+## Dictionary
+
+```swift
+var pac12teamRankings = Dictionary<String,Int>()
+
+var pac12teamRankings = [String:Int]() // preferred way
+
+var pac12teamRankings = ["Standford":1, "USC":11]
+let ranking = pac12teamRankings["Ohio State"] // ranking is an Int? (nil)
+pac12teamRankings["Cal"] = 12
+```
+
+Dictionaries are enumerated via a tuple:
+
+```swift
+for (key, value) in pac12teamRankings {
+    print("Team \(key) is ranked number \(value)")
+}
+```
+
+## String
+
+Accessing specific characters in a string (the horrible way):
+
+```swift
+let s: String = "hello"
+
+let firstIndex : String.Index = s.startIndex
+let firstChar: Character = s[firstIndex] // "h"
+
+let secondIndex: String.Index = s.index(after: firstIndex)
+let secondChar: Character = s[secondIndex] // "e"
+
+let fifthChar: Character = s[s.index(firstIndex, offsetBy: 4)] // "o"
+
+let substring = s[firstIndex...secondIndex] // "he"
+```
+
+String contains a property `characters` that can be iterated and accessed by index:
+
+```swift
+for c: Character in s.characters { } // iterates over each character
+
+let count = s.characters.count
+
+let firstSpace: String.Index = s.characters.index(of: " ") // returns index of the first space
+```
+
+Strings follow the same mutable/immutable rules as other types do.
+
+Many, many other helper functions exist for a String in the documentation. Stop writing a bunch of code and check if there is a helper function!
+
+## NSObject
+
+Base class for all Objective-C classes and is required by some advanced features of Swift.
+
+## NSNumber
+
+Generic number-holding class. Preferred to use Swifts specific number classes (Int, Double, etc.)
+
+## Date
+
+Handles all date, calendar, formatting, etc. functionality.
+
+## Data
+
+A value type that represents bits. Used to save/restore/transmit raw data.
+
+## Initialization
+
+* `init` is required for members that do not use default values, Optionals, closures, or lazy initialization.
+* `init()` is given "fo free" for all base classes unless a custom init is provided.
+* Allowed to set `let` values (similar to C# `readonly` initialization)
+* What is required?
+    * All properties must have values and must be set before the superclass's is called
+    * Superclass's init must be called before a value is assigned to any inherited property
+    * All inits must be called before accessing any members
+* inits can be inherited
+* inits can be required (all subclasses must implement it)
+* `init?` is marked as failable and returns an Optional
+
+## Any & AnyObject
+
+Used mostly for backwards compatibility with Obj-C since Swift is strongly typed. Represents anything (duh).
+
+```swift
+func prepare(for segue: UIStoryboardSegue, sender: Any?)
+```
+
+Can be seen with an array of different object types but this goes against all that Swift believes in.
+
+To cast an Any as a specific type:
+
+```swift
+let unknown: Any = ...
+
+if let foo = unknown as? MyType { ... }
+```
+
+## UserDefaults
+
+Lightweight "database" of values to persist between launchings of the app.
+
+```swift
+let defaults = UserDefaults.standard
+
+defaults.set(3.1415, forKey: "pi")
+let pi = defaults.double(forKey: "pi")
+```
+
+Saving is done automagically, but can be forced via:
+
+```swift
+defaults.synchronize()
+
+if !defaults.synchronize() { } // failed to synchronize
+```
+
+## Assertions
+
+Assertions can be used as a debugging aid and do not execute in published apps.
+
+```swift
+assert(() -> Bool, "message")
+```
