@@ -8,6 +8,18 @@ let maximumNumberOfLoginAttempts = 10
 
 Helpful to let the reader & Swift know this value is never going to change. This holds true for arrays and dictionaries as well. This makes the actual code perform more efficiently.
 
+Constants are also often defined in structs to be grouped together and types them:
+
+```swift
+private struct Ratios {
+    static let skullRadiusToEyeOffset: CGFloat = 3
+    static let skullRadiusToEyeRadius: CGFloat = 10
+    static let skullRadiusToMouthWidth: CGFloat = 1
+    static let skullRadiusToMouthHeight: CGFloat = 3
+    static let skullRadiusToMouthOffset: CGFloat = 3
+}
+```
+
 ## Variable
 
 ```swift
@@ -62,6 +74,15 @@ func doSomething(_ someValue: String) -> String {
 ```
 
 `_` is the external parameter, this removes the requirement for named parameters. Used most often as the first argument - NEVER for subsequent ones.
+
+Methods can be nested (i.e scoped to another):
+
+```swift
+func doSomething() {
+    func scopedMethod() {
+    }
+}
+```
 
 ## Logging:
 
@@ -480,3 +501,162 @@ Assertions can be used as a debugging aid and do not execute in published apps.
 ```swift
 assert(() -> Bool, "message")
 ```
+
+## Views
+
+Manually add/remove views:
+
+```swift
+func addSubview(_ view: UIView)
+func removeFromSuperview()
+```
+
+Generally initializers should be avoided, but are more common to have in UIViews. If you need an initializer, implement them both:
+
+```swift
+init(frame: CGRect) // init if view is created in code
+init(coder: NSCoder) // init if view is created in a storyboard
+```
+
+Views are coded into XML.
+
+`awakeFromNib()` is immediately called after initialization is complete.
+
+`CGFloat` is used to represent coordinates within a UIView. This should always be used over Double or Float.
+
+`CGPoint` represents x, y coordinates.
+
+`CGSize` represents a width and a height.
+
+`CGRect` is a struct with a CGPoint and CGSize. Many helper methods to aid in fine-tuning a view.
+
+The origin (0,0) of the coordinate system is in the upper left corner.
+
+Units are points, not pixels. Devices have many pixels per point. To get the number of pixels per point on the device (could be 1, 2, or 3 currently):
+
+```swift
+var contentScaleFactor: CGFloat
+```
+
+```swift
+var bounds: CGRect // Bounds represents the size in which is available to draw.
+```
+
+Never use these to draw, but rather to position:
+
+```swift
+var center: CGPoint // Center of a UI view within its superview
+var frame: CGRect // Rect of a UIView within its superview
+```
+
+Creating a view via code:
+
+```swift
+let newView = UIView(frame: myViewFrame)
+let newView = UIView() // frame will be CGRect.zero
+```
+
+To draw, override its `draw` method:
+
+```swift
+override func draw(_ rect: CGRect) // rect is purely an optimization as the bounds is what describes the entire drawing area
+```
+
+NEVER call the draw the method as it will be called by the system. To request a redraw to happen at the appropriate time:
+
+```swift
+setNeedsDisplay()
+setNeedsDisplay(_ rect: CGRect) // only a specific area to be redrawn
+```
+
+Add `@IBInspectable` to let a custom view's property be editable from a storyboard.
+
+### Core Graphics Concepts
+
+1. A context is needed to draw into. Can be retrieved by calling `UIGraphicsGetCurrentContext()`.
+1. Create paths out of lines, arcs, etc.
+1. Set attributes like colors, fonts textures, etc
+1. Stroke or fill the paths
+
+To define a path:
+
+```swift
+let path = UIBezierPath()
+path.move(to: CGPoint(80, 50))
+path.addLine(to: CGPoint(140, 150))
+path.addLine(to: CGPoint(10, 150))
+path.close() // if you want
+```
+
+To fill and stroke it:
+
+```swift
+UIColor.green.setFill() // defines green as the current fill color
+UIColor.red.setStroke() // defines red as the current stroke color
+path.lineWidth = 3.0
+path.fill() // fills with green
+path.stroke() // strokes with red
+```
+
+To add clipping `addClip()` and many many other helpful methods available for a UIBezierPath.
+
+Transparent colors can be created using the "alpha" value: `UIColor.yellow.withAlphaComponent(0.5)`. The system needs to know of this by setting `var opaque = false` on the view. The entire view can be set to transparent through `var alpha: CGFloat`. Transparency is not cheap, so use it wisely.
+
+### Drawing Text
+
+To draw an immutable/non-changing string:
+
+```swift
+let text = NSAttributedString(string: "hello")
+text.draw(at: aCGPoint)
+let textSize: CGSize = text.size
+```
+
+For a mutable string:
+
+```swift
+let mutableText = NSMutableAttributedString(string: "some string")
+```
+
+Set or add attributes by (Warning: this is a pre-Swift API):
+
+```swift
+func setAttributes(...)
+func addAttributes(...)
+
+NSForegroundColorAttributeName: UIColor
+NSStrokeWidthAttributeName: CGFloat
+NSFontAttributeName: UIFont
+
+// ...and many others under UIKit!
+```
+
+Best way to get the preferred font:
+
+```swift
+static func preferredFont(forTextStyle: UIFontTextStyle) -> UIFont
+
+// Example styles
+UIFontTextStyle.headline
+UIFontTextStyle.body
+UIFontTextStyle.footnote
+```
+
+System fonts are used for things like buttons. Do not use them for user's content:
+
+```swift
+static func systemFont(ofSize: CGFloat)
+static func boldSystemFont(ofSize: CGFloat)
+```
+
+### Drawing Images
+
+```swift
+let image: UIImage? = UIImage(named: "foo")
+
+image.draw(atPoint: aCGPoint) // at defined size
+image.draw(inRect: aCGRect) // scale to fit
+image.drawAsPattern(inRect: aCGRect) // tile it
+```
+
+Note the image is an Optional as it may not be found. Add `foo.jpg` to your project in the Images.xcassets file. Images can also be initialized from a file via contents or raw data.
